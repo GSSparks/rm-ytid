@@ -36,28 +36,39 @@ fi
 
 if [[ -n $1 ]]; then
     if [[ -f $1 ]]; then
-        file="$1"
+        files="$1"
+        single=1
     else
         echo "Error: Invalid file path."
         usage
         exit 1
     fi
 else
-    file="*"
+    files="*"
+    single=0
 fi
 
 IFS=$'\n'
-for file in $file; do
-    echo "$file" | sed 's/\(.*\)\(.\{14\}\)\.\([^\.]*\)$/\1.\3/'
+for file in $files; do
+    if [[ $file =~ \[.{11}\] ]]; then
+        echo "$file" | sed 's/\(.*\)\(.\{14\}\)\.\([^\.]*\)$/\1.\3/'
+    else
+        echo "No video ID detected for filename $file"
+        if [ "$single" -eq 1 ]; then
+            exit 0
+        fi
+    fi
 done
 unset IFS
 
 read -p "Are you sure you want to proceed with the renaming? (y/n): " choice
 if [[ $choice == "y" ]]; then
     IFS=$'\n'
-    for file in $file; do
-        new_name=$(echo "$file" | sed 's/\(.*\)\(.\{14\}\)\.\([^\.]*\)$/\1.\3/')
-        mv "$file" "$new_name"
+    for file in $files; do
+        if [[ $file =~ \[.{11}\] ]]; then
+            new_name=$(echo "$file" | sed 's/\(.*\)\(.\{14\}\)\.\([^\.]*\)$/\1.\3/')
+            mv "$file" "$new_name"
+        fi
     done
     unset IFS
     echo "Renaming completed."
