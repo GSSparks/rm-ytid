@@ -52,9 +52,21 @@ IFS=$'\n'
 for file in $files; do
     if [[ $file =~ \[.{11}\] ]]; then
         found_files=true
-        echo "$file" | sed 's/\(.*\)\(.\{14\}\)\.\([^\.]*\)$/\1.\3/'
+        new_name=$(echo "$file" | sed 's/\(.*\)\(.\{14\}\)\.\([^\.]*\)$/\1.\3/')
+        prefix=""
+        counter=1
+
+        while [[ -e "$prefix$new_name" ]]; do
+            prefix="${counter}-"
+            ((counter++))
+        done
+
+        if [ "$prefix" != "" ]; then
+            new_name="$prefix$new_name"
+        fi
+
+        echo "$file -> $new_name"
     else
-        echo "SKIPPING: $file"
         if [ "$single" -eq 1 ]; then
             exit 0
         fi
@@ -69,7 +81,20 @@ if [ "$found_files" == true ]; then
         for file in $files; do
             if [[ $file =~ \[.{11}\] ]]; then
                 new_name=$(echo "$file" | sed 's/\(.*\)\(.\{14\}\)\.\([^\.]*\)$/\1.\3/')
+                prefix=""
+                counter=1
+
+                while [[ -e "$prefix$new_name" ]]; do
+                    prefix="${counter}-"
+                    ((counter++))
+                done
+
+                if [ "$prefix" != "" ]; then
+                    new_name="$prefix$new_name"
+                fi
+
                 mv "$file" "$new_name"
+                echo "Renamed: $file -> $new_name"
             fi
         done
         unset IFS
@@ -78,6 +103,6 @@ if [ "$found_files" == true ]; then
         echo "Renaming aborted."
     fi
 else
-    echo "No files with video IDs found. Skipping renaming."
+    echo "No files with video IDs found. Nothing to rename."
 fi
 
